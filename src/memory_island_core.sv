@@ -669,7 +669,7 @@ module memory_island_core #(
          );
 
          // Memory bank
-         tc_sram #(
+         mem_multibank_pwrgate #(
              .NumWords (WordsPerBank),
              .DataWidth(NarrowDataWidth),
              .ByteWidth(8),

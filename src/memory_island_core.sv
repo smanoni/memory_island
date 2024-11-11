@@ -6,50 +6,51 @@
 
 module memory_island_core #(
     /// Address Width
-    parameter int unsigned AddrWidth       = 0,
+    parameter int unsigned AddrWidth = 0,
     /// Data Width for the Narrow Ports
     parameter int unsigned NarrowDataWidth = 0,
     /// Data Width for the Wide Ports
-    parameter int unsigned WideDataWidth   = 0,
-
+    parameter int unsigned WideDataWidth = 0,
+    /// Number of Logic banks in each Narrow Bank. Logic banka are the smallest switchable units
+    parameter int unsigned NumLogicbanks = 1,
     /// Number of Narrow Ports
     parameter int unsigned NumNarrowReq = 0,
     /// Number of Wide Ports
-    parameter int unsigned NumWideReq   = 0,
+    parameter int unsigned NumWideReq = 0,
 
     /// Banking Factor for the Wide Ports (power of 2)
-    parameter int unsigned NumWideBanks  = (1 << $clog2(NumWideReq)) * 2,
+    parameter int unsigned NumWideBanks = (1 << $clog2(NumWideReq)) * 2,
     /// Extra multiplier for the Narrow banking factor (baseline is WideWidth/NarrowWidth) (power of 2)
     parameter int unsigned NarrowExtraBF = 1,
     /// Words per memory bank. (Total number of banks is (WideWidth/NarrowWidth)*NumWideBanks)
-    parameter int unsigned WordsPerBank  = 1024,
+    parameter int unsigned WordsPerBank = 1024,
 
     /// Spill Narrow
-    parameter int unsigned SpillNarrowReqEntry  = 0,
-    parameter int unsigned SpillNarrowRspEntry  = 0,
+    parameter int unsigned SpillNarrowReqEntry = 0,
+    parameter int unsigned SpillNarrowRspEntry = 0,
     parameter int unsigned SpillNarrowReqRouted = 0,
     parameter int unsigned SpillNarrowRspRouted = 0,
     /// Spill Wide
-    parameter int unsigned SpillWideReqEntry    = 0,
-    parameter int unsigned SpillWideRspEntry    = 0,
-    parameter int unsigned SpillWideReqRouted   = 0,
-    parameter int unsigned SpillWideRspRouted   = 0,
-    parameter int unsigned SpillWideReqSplit    = 0,
-    parameter int unsigned SpillWideRspSplit    = 0,
+    parameter int unsigned SpillWideReqEntry = 0,
+    parameter int unsigned SpillWideRspEntry = 0,
+    parameter int unsigned SpillWideReqRouted = 0,
+    parameter int unsigned SpillWideRspRouted = 0,
+    parameter int unsigned SpillWideReqSplit = 0,
+    parameter int unsigned SpillWideRspSplit = 0,
     /// Spill at Bank
-    parameter int unsigned SpillReqBank         = 0,
-    parameter int unsigned SpillRspBank         = 0,
+    parameter int unsigned SpillReqBank = 0,
+    parameter int unsigned SpillRspBank = 0,
 
     // verilog_lint: waive explicit-parameter-storage-type
-    parameter MemorySimInit = "none",
+    parameter              MemorySimInit = "none",
 
     /// Relinquish narrow priority after x cycles, 0 for never. Requires SpillNarrowReqRouted==0.
     parameter int unsigned WidePriorityWait = 1,
 
     // Derived, DO NOT OVERRIDE
     parameter int unsigned NarrowStrbWidth = NarrowDataWidth / 8,
-    parameter int unsigned WideStrbWidth   = WideDataWidth / 8,
-    parameter int unsigned NWDivisor       = WideDataWidth / NarrowDataWidth
+    parameter int unsigned WideStrbWidth = WideDataWidth / 8,
+    parameter int unsigned NWDivisor = WideDataWidth / NarrowDataWidth
 ) (
     input logic                    clk_i,
     input logic                    rst_ni,
@@ -670,12 +671,13 @@ module memory_island_core #(
 
          // Memory bank
          mem_multibank_pwrgate #(
-             .NumWords (WordsPerBank),
+             .NumWords(WordsPerBank),
              .DataWidth(NarrowDataWidth),
              .ByteWidth(8),
-             .NumPorts (1),
-             .Latency  (1),
-             .SimInit  (MemorySimInit)
+             .NumPorts(1),
+             .Latency(1),
+             .NumLogicBanks(NumLogicbanks),
+             .SimInit(MemorySimInit)
          ) i_bank (
              .clk_i,
              .rst_ni (rst_sync_ni[i]),

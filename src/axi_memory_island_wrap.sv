@@ -21,6 +21,9 @@ module axi_memory_island_wrap #(
   parameter type axi_wide_req_t               = logic,
   parameter type axi_wide_rsp_t               = logic,
 
+  // SRAM Configuration
+  parameter type impl_in_t                    = logic,
+
   /// Number of Narrow Ports
   parameter int unsigned NumNarrowReq         = 0,
   /// Number of Wide Ports
@@ -57,10 +60,14 @@ module axi_memory_island_wrap #(
   /// Words per memory bank. (Total number of banks is (WideWidth/NarrowWidth)*NumWideBanks)
   parameter int unsigned WordsPerBank         = 1024,
   // verilog_lint: waive explicit-parameter-storage-type
-  parameter              MemorySimInit        = "none"
+  parameter              MemorySimInit        = "none",
+
+  // Derived, DO NOT OVERWRITE
+  parameter int unsigned NWDivisor            = WideDataWidth/NarrowDataWidth
 ) (
   input  logic                               clk_i,
   input  logic                               rst_ni,
+  input  impl_in_t [NumWideBanks*NWDivisor]  impl_i,
 
   input  axi_narrow_req_t [NumNarrowReq-1:0] axi_narrow_req_i,
   output axi_narrow_rsp_t [NumNarrowReq-1:0] axi_narrow_rsp_o,
@@ -254,10 +261,12 @@ module axi_memory_island_wrap #(
     .SpillReqBank         ( SpillReqBank         ),
     .SpillRspBank         ( SpillRspBank         ),
     .WidePriorityWait     ( WidePriorityWait     ),
-    .MemorySimInit        ( MemorySimInit        )
+    .MemorySimInit        ( MemorySimInit        ),
+    .impl_in_t            ( impl_in_t            )
   ) i_memory_island (
     .clk_i,
     .rst_ni,
+    .impl_i,
 
     .narrow_req_i    ( narrow_req    ),
     .narrow_gnt_o    ( narrow_gnt    ),

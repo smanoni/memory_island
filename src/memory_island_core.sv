@@ -40,6 +40,9 @@ module memory_island_core #(
   parameter int unsigned SpillReqBank         = 0,
   parameter int unsigned SpillRspBank         = 0,
 
+  // SRAM Configuration
+  parameter type impl_in_t                    = logic,
+
   // verilog_lint: waive explicit-parameter-storage-type
   parameter              MemorySimInit        = "none",
 
@@ -49,30 +52,34 @@ module memory_island_core #(
   // Derived, DO NOT OVERRIDE
   parameter int unsigned NarrowStrbWidth      = NarrowDataWidth/8,
   parameter int unsigned WideStrbWidth        = WideDataWidth/8,
-  parameter int unsigned NWDivisor            = WideDataWidth/NarrowDataWidth
+  parameter int unsigned NWDivisor            = WideDataWidth/NarrowDataWidth,
+  parameter int unsigned NumBanks             = NumWideBanks*NWDivisor                            
 ) (
   input  logic clk_i,
   input  logic rst_ni,
 
+  // SRAM control signals
+  input  impl_in_t                          [NumBanks-1:0] impl_i,
+
   // Narrow inputs
-  input  logic [NumNarrowReq-1:0]                      narrow_req_i,
-  output logic [NumNarrowReq-1:0]                      narrow_gnt_o,
-  input  logic [NumNarrowReq-1:0][      AddrWidth-1:0] narrow_addr_i,
-  input  logic [NumNarrowReq-1:0]                      narrow_we_i,
-  input  logic [NumNarrowReq-1:0][NarrowDataWidth-1:0] narrow_wdata_i,
-  input  logic [NumNarrowReq-1:0][NarrowStrbWidth-1:0] narrow_strb_i,
-  output logic [NumNarrowReq-1:0]                      narrow_rvalid_o,
-  output logic [NumNarrowReq-1:0][NarrowDataWidth-1:0] narrow_rdata_o,
+  input  logic     [NumNarrowReq-1:0]                      narrow_req_i,
+  output logic     [NumNarrowReq-1:0]                      narrow_gnt_o,
+  input  logic     [NumNarrowReq-1:0][      AddrWidth-1:0] narrow_addr_i,
+  input  logic     [NumNarrowReq-1:0]                      narrow_we_i,
+  input  logic     [NumNarrowReq-1:0][NarrowDataWidth-1:0] narrow_wdata_i,
+  input  logic     [NumNarrowReq-1:0][NarrowStrbWidth-1:0] narrow_strb_i,
+  output logic     [NumNarrowReq-1:0]                      narrow_rvalid_o,
+  output logic     [NumNarrowReq-1:0][NarrowDataWidth-1:0] narrow_rdata_o,
 
   // Wide inputs
-  input  logic [  NumWideReq-1:0]                      wide_req_i,
-  output logic [  NumWideReq-1:0]                      wide_gnt_o,
-  input  logic [  NumWideReq-1:0][      AddrWidth-1:0] wide_addr_i,
-  input  logic [  NumWideReq-1:0]                      wide_we_i,
-  input  logic [  NumWideReq-1:0][  WideDataWidth-1:0] wide_wdata_i,
-  input  logic [  NumWideReq-1:0][  WideStrbWidth-1:0] wide_strb_i,
-  output logic [  NumWideReq-1:0]                      wide_rvalid_o,
-  output logic [  NumWideReq-1:0][  WideDataWidth-1:0] wide_rdata_o
+  input  logic     [  NumWideReq-1:0]                      wide_req_i,
+  output logic     [  NumWideReq-1:0]                      wide_gnt_o,
+  input  logic     [  NumWideReq-1:0][      AddrWidth-1:0] wide_addr_i,
+  input  logic     [  NumWideReq-1:0]                      wide_we_i,
+  input  logic     [  NumWideReq-1:0][  WideDataWidth-1:0] wide_wdata_i,
+  input  logic     [  NumWideReq-1:0][  WideStrbWidth-1:0] wide_strb_i,
+  output logic     [  NumWideReq-1:0]                      wide_rvalid_o,
+  output logic     [  NumWideReq-1:0][  WideDataWidth-1:0] wide_rdata_o
 );
 
   initial begin
@@ -673,16 +680,19 @@ module memory_island_core #(
       );
 
       // Memory bank
-      tc_sram #(
+      tc_sram_impl #(
         .NumWords  ( WordsPerBank    ),
         .DataWidth ( NarrowDataWidth ),
         .ByteWidth ( 8               ),
         .NumPorts  ( 1               ),
         .Latency   ( 1               ),
-        .SimInit   ( MemorySimInit   )
+        .SimInit   ( MemorySimInit   ),
+        .impl_in_t ( impl_in_t       )
       ) i_bank (
         .clk_i,
         .rst_ni,
+        .impl_i  ( impl_i [j+i*NWDivisor] ),
+        .impl_o  ( /*not used*/           ),
         .req_i   ( req_bank_spill  [i][j] ),
         .we_i    ( we_bank_spill   [i][j] ),
         .addr_i  ( addr_bank_spill [i][j] ),

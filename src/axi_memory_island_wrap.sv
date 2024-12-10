@@ -65,9 +65,9 @@ module axi_memory_island_wrap #(
   // Derived, DO NOT OVERWRITE
   parameter int unsigned NWDivisor            = WideDataWidth/NarrowDataWidth
 ) (
-  input  logic                               clk_i,
-  input  logic                               rst_ni,
-  input  impl_in_t [NumWideBanks*NWDivisor]  impl_i,
+  input  logic                                  clk_i,
+  input  logic                                  rst_ni,
+  input  impl_in_t [NumWideBanks*NWDivisor-1:0] impl_i,
 
   input  axi_narrow_req_t [NumNarrowReq-1:0] axi_narrow_req_i,
   output axi_narrow_rsp_t [NumNarrowReq-1:0] axi_narrow_rsp_o,

@@ -320,7 +320,7 @@ module axi_memory_island_tb #(
       // Block reads if necessary
       if (axi_narrow_req[i].ar_valid && filtered_narrow_rsp[i].ar_ready) begin
         // check in-flight requests
-        if ( |read_overlapping_write[i] ) begin
+        if ( |read_overlapping_write[i] || |live_read_overlapping_write[i] ) begin
           filtered_narrow_req[i].ar_valid = 1'b0;
           axi_narrow_rsp[i].ar_ready = 1'b0;
           blocking_read[i] = 1'b1;
@@ -502,7 +502,7 @@ module axi_memory_island_tb #(
       // Block reads if necessary
       if (axi_wide_req[i].ar_valid && filtered_wide_rsp[i].ar_ready) begin
         // check in-flight requests
-        if ( |read_overlapping_write[ReqIdx] ) begin
+        if ( |read_overlapping_write[ReqIdx] || |live_read_overlapping_write[ReqIdx] ) begin
           filtered_wide_req[i].ar_valid = 1'b0;
           axi_wide_rsp[i].ar_ready = 1'b0;
           blocking_read[ReqIdx] = 1'b1;
